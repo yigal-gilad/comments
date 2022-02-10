@@ -1,0 +1,50 @@
+<div class="container">
+<ul class="list-group">
+  <ng-container *ngTemplateOutlet="recursiveListTmpl; context:{ list: list }">
+  </ng-container>
+</ul>
+
+<ng-template #recursiveListTmpl let-list="list">
+  <li *ngFor="let item of list" class="list-group-item">
+    <div class="media p-3">
+      <img [src]='"assets/users/"+item.ownerId+".jpg"' class="mr-3 mt-3" style="width:60px;">
+      <div class="media-body">
+        <h4> {{findUserById(item.ownerId).displayName}} <small><i>{{item.createdAt | time}}</i></small></h4>
+        <p>{{ item.txt }}</p>      
+      </div>
+    </div>
+    <div class="input-group mb-3" *ngIf="item.ownerId !== 3">
+      <input type="text" class="form-control" [(ngModel)]="text">
+      <div class="input-group-append">
+        <button class="btn btn-primary" [disabled]="!text" (click)="submit(text, item.id)" type="submit">Add</button>
+      </div>
+      </div>
+    <div class="input-group mb-3" *ngIf="item.ownerId === 3">
+      <input type="text" [(ngModel)]="text" class="form-control">
+      <div class="input-group-append">
+        <button class="btn btn-primary" [disabled]="!text" (click)="updateOrDelete(item.id, text)" type="button">edit</button>
+        <button class="btn btn-danger" (click)="updateOrDelete(item.id)" type="button">delete</button>
+      </div>
+    </div>
+    <ul *ngIf="item.children.length > 0" class="list-group">
+      <h6 *ngIf="item.children">Comments:</h6>
+      <ng-container *ngTemplateOutlet="recursiveListTmpl; context:{ list: item.children }"></ng-container>
+    </ul>
+  </li>
+</ng-template>
+<br>
+<div class="row">
+  <div class="col-2">
+    <img [src]='"assets/users/"+3+".jpg"' class="img-fluid">
+  </div>
+  <div class="col-10">
+    <div class="input-group mb-3">
+      <input type="text" class="form-control" [(ngModel)]="text">
+      <div class="input-group-append">
+        <button class="btn btn-primary" [disabled]="!text" (click)="submit(text)" type="submit">Submit</button>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+<br>
