@@ -5,7 +5,8 @@
 </ul>
 
 <ng-template #recursiveListTmpl let-list="list">
-  <li *ngFor="let item of list" class="list-group-item">
+  <div *ngFor="let item of list">
+    <li *ngIf="!item.deletedAt" class="list-group-item">
     <div *ngIf="!item.deletedAt">
     <div class="media p-3">
       <img [src]='"assets/users/"+item.ownerId+".jpg"' class="mr-3 mt-3" style="width:60px;">
@@ -33,6 +34,7 @@
     </ul>
   </div>
   </li>
+</div>
 </ng-template>
 <br>
 <div class="row">
