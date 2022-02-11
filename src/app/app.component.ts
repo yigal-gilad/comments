@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 
 import { AccountsService } from "./accounts.service";
 import { CommentsService } from "./comments.service";
-
+import { Observable, interval } from 'rxjs';
+import { map } from 'rxjs/operators';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -15,9 +16,20 @@ export class AppComponent implements OnInit {
   list: any;
   users: any;
   text: any;
+  slectedObj: any = {};
+  clock: any;
+  sub: string = ''
 
   ngOnInit() {
+    this.clock = new Observable((observer) => {
+      // observable execution
+      setInterval(() => {
+        observer.next(new Date());
+      }, 1000)
+      // observer.next(setInterval(() => {console.log(new Date()); return new Date()}, 1000))
+    });
     this.oldLIst = this.comments.getJson();
+    this.clock.subscribe((date: any) => this.sub = date);
     this.updateView();
   }
   title = 'comments';
@@ -26,10 +38,9 @@ export class AppComponent implements OnInit {
     this.list = this.oldLIst;
     localStorage.setItem("obj", JSON.stringify(this.oldLIst));
     this.list.sort((a: any, b: any) => {
-      return <any>new Date(b.createdAt) - <any>new Date(a.createdAt);
+      return <any>new Date(b.createdAt) + <any>new Date(a.createdAt);
     });
     this.list = this.list_to_tree(this.list);
-
     this.users = this.accounts.getJson();
   }
 
@@ -87,14 +98,18 @@ export class AppComponent implements OnInit {
     this.text = "";
   }
 
-  updateOrDelete(id: number, text?: string, obj?: any) {
+  updateOrDelete(id: number, text?: string) {
     var index = this.oldLIst.findIndex((object: any) => {
       return object.id === id;
     });
-    if (text) this.oldLIst[index].txt = text;
+    if (text) {this.oldLIst[index].txt = text; this.oldLIst[index].createdAt = new Date};
+    console.log(id);
     if (!text) this.oldLIst[index].deletedAt = new Date();
     this.text = "";
+    console.log(this.oldLIst[index].deletedAt)
     this.updateView();
   }
-
+  select(obj: object) {
+    this.slectedObj = obj;
+  }
 }
