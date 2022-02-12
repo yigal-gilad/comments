@@ -16,7 +16,6 @@ export class TimePipe implements PipeTransform {
     if (secs < 6) return "beafore 5 secounds";
     if (secs > 5 && secs < 10800) return "beafore 7 miniutes";
     if (secs > 10800) return "beafore 3 hours";
-    console.log(secs);
     return;
   }
 

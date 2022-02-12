@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-
 import { AccountsService } from "./accounts.service";
 import { CommentsService } from "./comments.service";
-import { Observable, interval } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -12,104 +11,97 @@ import { map } from 'rxjs/operators';
 export class AppComponent implements OnInit {
 
   constructor(private accounts: AccountsService, private comments: CommentsService) { }
-  oldLIst: any;
-  list: any;
-  users: any;
-  text: any;
+  unsortedList: any[] = [];
+  users: any[] = [];
+  tree: any[] = [];
+  text: string = '';
   slectedObj: any = {};
-  clock: any;
-  sub: string = ''
+  clockObs?: Observable<Date>;
+  sub?: Date;
+  currentUser: number = 3;
 
   ngOnInit() {
-    this.clock = new Observable((observer) => {
+    // get initial data from the services
+    this.unsortedList = this.comments.getJson();
+    this.users = this.accounts.getJson();
+
+    // clock
+    this.clockObs = new Observable((observer) => {
       // observable execution
       setInterval(() => {
         observer.next(new Date());
       }, 1000)
-      // observer.next(setInterval(() => {console.log(new Date()); return new Date()}, 1000))
     });
-    this.oldLIst = this.comments.getJson();
-    this.clock.subscribe((date: any) => this.sub = date);
+    this.clockObs.subscribe((date: any) => this.sub = date);
     this.updateView();
   }
-  title = 'comments';
 
+  // callled on evry update, delte or add of new comment to update the comment tree
   updateView() {
-    this.list = this.oldLIst;
-    localStorage.setItem("obj", JSON.stringify(this.oldLIst));
-    this.list.sort((a: any, b: any) => {
-      return <any>new Date(b.createdAt) + <any>new Date(a.createdAt);
-    });
-    this.list = this.list_to_tree(this.list);
-    this.users = this.accounts.getJson();
+    localStorage.setItem("obj", JSON.stringify(this.unsortedList));
+    this.tree = this.list_to_tree(this.unsortedList);
   }
 
-  list_to_tree(list: any) {
+  // takes unsorted comments list and returns sorted commnets tree array
+  list_to_tree(unsorted: any[]): any[] {
+    // first sort by date
+    unsorted.sort((a: any, b: any) => {
+      return <any>new Date(b.createdAt) + <any>new Date(a.createdAt);
+    });
+    // then create the tree
     var map: any = {}, node: any, roots = [], i;
 
-    for (i = 0; i < list.length; i += 1) {
-      map[list[i].id] = i; // initialize the map
-      list[i].children = []; // initialize the children
+    for (i = 0; i < unsorted.length; i += 1) {
+      map[unsorted[i].id] = i; // initialize the map
+      unsorted[i].children = []; // initialize the children
     }
 
-    for (i = 0; i < list.length; i += 1) {
-      node = list[i];
-      if (node.parentCommentId && !node.deletedAt) {
-        // if you have dangling branches check that map[node.parentId] exists
-        list[map[node.parentCommentId]].children.push(node);
-      } else {
-        roots.push(node);
+    for (i = 0; i < unsorted.length; i += 1) {
+      node = unsorted[i];
+      if (!node.deletedAt) {
+        if (node.parentCommentId) {
+          // if you have dangling branches check that map[node.parentId] exists
+          unsorted[map[node.parentCommentId]].children.push(node);
+        } else {
+          roots.push(node);
+        }
       }
     }
     return roots;
   }
 
-  custom_sort([a, b]: any) {
-    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-  }
-
-  sortTree(tree: any) {
-    tree.children.sort(function ([a, b]: any) {
-
-      return new Date(b.createdAt)
+  findUserById = (id: number) => {
+    var index = this.users.findIndex((object: any) => {
+      return object.id === id;
     });
-    for (let i = 0; i < tree.children.length; i++) {
-      this.sortTree(tree.children[i])
-    }
+    return this.users[index];
   }
 
-  findUserById = (id: string) => {
-    let [key, user]: any = Object.entries(this.users).find(([key, user]: any) => user.id === id);
-    return user;
-  }
-
+  // add new comment or child comment
   submit(text: string, parent?: number) {
-
-    this.oldLIst.push({
-      "id": this.oldLIst.length,
+    this.unsortedList.push({
+      "id": this.unsortedList.length + 1,
       "parentCommentId": parent ? parent : null,
-      "ownerId": 3,
+      "ownerId": this.currentUser,
       "txt": text,
       "createdAt": new Date(),
       "deletedAt": null
     })
-    console.log(this.oldLIst[this.oldLIst.length])
     this.updateView();
     this.text = "";
   }
 
+  // edit or delete your comment or child comment
   updateOrDelete(id: number, text?: string) {
-    var index = this.oldLIst.findIndex((object: any) => {
+    var index = this.unsortedList.findIndex((object: any) => {
       return object.id === id;
     });
-    if (text) {this.oldLIst[index].txt = text; this.oldLIst[index].createdAt = new Date};
-    console.log(id);
-    if (!text) this.oldLIst[index].deletedAt = new Date();
+    if (text) {
+      this.unsortedList[index].txt = text;
+      this.unsortedList[index].createdAt = new Date
+    };
+    if (!text) this.unsortedList[index].deletedAt = new Date();
     this.text = "";
-    console.log(this.oldLIst[index].deletedAt)
     this.updateView();
-  }
-  select(obj: object) {
-    this.slectedObj = obj;
   }
 }
