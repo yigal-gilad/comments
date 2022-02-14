@@ -8,15 +8,13 @@ import { AppComponent } from './app.component';
 import { AccountsService } from "./accounts.service";
 import { CommentsService } from "./comments.service";
 import { TimePipe } from './time.pipe';
-import { ModalComponent } from './modal/modal.component';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 @NgModule({
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   declarations: [
     AppComponent,
-    TimePipe,
-    ModalComponent
+    TimePipe
   ],
   imports: [
     BrowserModule,
